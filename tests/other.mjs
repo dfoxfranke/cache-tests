@@ -235,6 +235,322 @@ export default
           expected_type: 'cached'
         }
       ]
+    },
+    {
+      name: 'Does the HTTP cache update a Content-Language header on a weak ETag match?',
+      id: 'other-content-language-update-weak-etag',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          response_headers: [
+            ['Content-Language', 'en'],
+            ['Vary', 'Accept-Language'],
+            ['ETag', 'W/"v1"'],
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Accept-Language', 'fr'],
+            ['If-None-Match', 'W/"v1"']
+          ],
+          response_headers: [
+            ['Content-Language', 'fr', false],
+            ['Vary', 'Accept-Language'],
+            ['ETag', 'W/"v1"'],
+          ],
+          expected_type: 'etag_validated',
+          expected_status: 304
+        }),
+        {
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          expected_type: 'cached',
+          setup_tests: ['expected_type'],
+          expected_response_headers: [
+            ['Content-Language', 'fr']
+          ]
+        }
+      ]
+    },
+    {
+      name: 'Does the HTTP cache update a Content-Language header on a strong ETag match?',
+      id: 'other-content-language-update-strong-etag',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          response_headers: [
+            ['Content-Language', 'en'],
+            ['Vary', 'Accept-Language'],
+            ['ETag', '"v1"'],
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Accept-Language', 'fr'],
+            ['If-None-Match', '"v1"']
+          ],
+          response_headers: [
+            ['Content-Language', 'fr', false],
+            ['Vary', 'Accept-Language'],
+            ['ETag', '"v1"'],
+          ],
+          expected_type: 'etag_validated',
+          expected_status: 304,
+        }),
+        {
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          expected_type: 'cached',
+          setup_tests: ['expected_type'],
+          expected_response_headers: [
+            ['Content-Language', 'fr']
+          ]
+        }
+      ]
+    },
+    {
+      name: 'Does the HTTP cache update a Content-Language header on a weak Last-Modified match?',
+      id: 'other-content-language-update-weak-lm',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          response_headers: [
+            ['Content-Language', 'en'],
+            ['Vary', 'Accept-Language'],
+            ['Date', 0],
+            ['Last-Modified', 0]
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Accept-Language', 'fr'],
+            ['If-Modified-Since', 0]
+          ],
+          response_headers: [
+            ['Content-Language', 'fr', false],
+            ['Vary', 'Accept-Language'],
+          ],
+          expected_type: 'lm_validated',
+          expected_status: 304,
+          magic_ims: true
+        }),
+        {
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          expected_type: 'cached',
+          setup_tests: ['expected_type'],
+          expected_response_headers: [
+            ['Content-Language', 'fr']
+          ]
+        }
+      ]
+    },
+    {
+      name: 'Does the HTTP cache update a Content-Language header on a strong Last-Modified match?',
+      id: 'other-content-language-update-strong-lm',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          response_headers: [
+            ['Content-Language', 'en'],
+            ['Vary', 'Accept-Language'],
+            ['Date', 0],
+            ['Last-Modified', -100000]
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Accept-Language', 'fr'],
+            ['If-Modified-Since', 0]
+          ],
+          response_headers: [
+            ['Content-Language', 'fr', false],
+            ['Vary', 'Accept-Language'],
+          ],
+          expected_type: 'lm_validated',
+          expected_status: 304,
+          magic_ims: true
+        }),
+        {
+          request_headers: [
+            ['Accept-Language', 'fr']
+          ],
+          expected_type: 'cached',
+          setup_tests: ['expected_type'],
+          expected_response_headers: [
+            ['Content-Language', 'fr']
+          ]
+        }
+      ]
+    },
+    {
+      name: 'Does the HTTP cache update a Vary header on a match-breaking weak ETag match?',
+      id: 'other-vary-update-weak-etag',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '0']
+          ],
+          response_headers: [
+            ['Vary', 'Foo'],
+            ['ETag', 'W/"v1"'],
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+            ['If-None-Match', 'W/"v1"']
+          ],
+          response_headers: [
+            ['Vary', 'Bar'],
+            ['ETag', 'W/"v1"'],
+          ],
+          expected_type: 'etag_validated',
+          expected_status: 304
+        }),
+        {
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+          ],
+          expected_type: 'cached',
+          expected_reponse_headers: ['Vary', 'Bar']
+        }
+      ]
+    },
+    {
+      name: 'Does the HTTP cache update a Vary header on a match-breaking strong ETag match?',
+      id: 'other-vary-update-strong-etag',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '0']
+          ],
+          response_headers: [
+            ['Vary', 'Foo'],
+            ['ETag', '"v1"'],
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+            ['If-None-Match', '"v1"']
+          ],
+          response_headers: [
+            ['Vary', 'Bar'],
+            ['ETag', '"v1"'],
+          ],
+          expected_type: 'etag_validated',
+          expected_status: 304
+        }),
+        {
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+          ],
+          expected_type: 'cached',
+          expected_reponse_headers: ['Vary', 'Bar']
+        }
+      ]
+    },
+    {
+      name: 'Does the HTTP cache update a Vary header on a match-breaking weak Last-Modified match?',
+      id: 'other-vary-update-weak-lm',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '0']
+          ],
+          response_headers: [
+            ['Vary', 'Foo'],
+            ['Date', 0],
+            ['Last-Modified', 0]
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+            ['If-Modified-Since', 0]
+          ],
+          response_headers: [
+            ['Vary', 'Bar'],
+          ],
+          expected_type: 'lm_validated',
+          expected_status: 304,
+          magic_ims: true
+        }),
+        {
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+          ],
+          expected_type: 'cached',
+          expected_reponse_headers: ['Vary', 'Bar']
+        }
+      ]
+    },
+    {
+      name: 'Does the HTTP cache update a Vary header on a match-breaking strong Last-Modified match?',
+      id: 'other-vary-update-strong-lm',
+      kind: 'check',
+      requests: [
+        templates.becomeStale({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '0']
+          ],
+          response_headers: [
+            ['Vary', 'Foo'],
+            ['Date', 0],
+            ['Last-Modified', -1000000]
+          ]
+        }),
+        templates.fresh({
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+            ['If-Modified-Since', 0]
+          ],
+          response_headers: [
+            ['Vary', 'Bar'],
+          ],
+          expected_type: 'lm_validated',
+          expected_status: 304,
+          magic_ims: true
+        }),
+        {
+          request_headers: [
+            ['Foo', 'foo'],
+            ['Bar', '1'],
+          ],
+          expected_type: 'cached',
+          expected_reponse_headers: ['Vary', 'Bar']
+        }
+      ]
     }
   ]
 }
